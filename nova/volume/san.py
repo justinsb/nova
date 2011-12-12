@@ -69,6 +69,10 @@ class SanISCSIDriver(ISCSIDriver):
         super(SanISCSIDriver, self).__init__()
         self.run_local = FLAGS.san_is_local
 
+    def __init__(self):
+        super(SanISCSIDriver, self).__init__()
+        self.run_local = FLAGS.san_is_local
+
     def _build_iscsi_target_name(self, volume):
         return "%s%s" % (FLAGS.iscsi_target_prefix, volume['name'])
 

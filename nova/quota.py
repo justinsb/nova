@@ -20,6 +20,10 @@
 
 from nova import db
 from nova import flags
+from nova import log as logging
+
+
+LOG = logging.getLogger("nova.quota")
 
 
 FLAGS = flags.FLAGS
@@ -98,6 +102,14 @@ def allowed_instances(context, requested_instances, instance_type):
     allowed_instances = min(allowed_instances,
                             allowed_cores // instance_type['vcpus'],
                             allowed_ram // instance_type['memory_mb'])
+    if requested_instances > allowed_instances:
+        LOG.debug(_('Quota limit exceeded. '
+                    'allowed_instances=%(allowed_instances)s '
+                    'allowed_cores=%(allowed_cores)s '
+                    'allowed_ram=%(allowed_ram)s '
+                    'quota=%(quota)s '
+                    'project=%(project_id)s') % locals())
+
     return min(requested_instances, allowed_instances)
 
 

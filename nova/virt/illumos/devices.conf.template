@@ -1,0 +1,85 @@
+## Control socket
+#if $getVar('path_monitor', False)
+[chardev "charmonitor"]
+  backend = "socket"
+  path = "${path_monitor}"
+  server = "on"
+  wait = "off"
+
+[mon "monitor"]
+  chardev = "charmonitor"
+  mode = "control"
+
+#end if
+
+##---------------------------
+## Disks
+##---------------------------
+#for $drive in $drives
+
+##-drive file=${drive.path},if=none,id=drive-virtio-disk${drive.id},boot=${drive.boot},format=${drive.format},media=${drive.media} \
+##-device virtio-blk-pci,bus=pci.0,drive=drive-virtio-disk${drive.id},id=virtio-disk${drive.id} \
+
+[drive "drive-virtio-disk${drive.id}"]
+  file = "${drive.path}"
+  if = "none"
+  boot = "${drive.boot}"
+  format = "${drive.format}"
+  media = "${drive.media}"
+
+
+[device "virtio-disk${drive.id}"]
+  driver = "virtio-blk-pci"
+  bus = "pci.0"
+  drive = "drive-virtio-disk${drive.id}"
+
+#end for
+
+
+##---------------------------
+## Network cards
+##---------------------------
+#for $nic in $nics
+
+[net]
+  type = "nic"
+  vlan = "${nic.vlan}"
+  name = "${nic.name}"
+  model = "${nic.model}"
+  macaddr = "${nic.mac}"
+
+[net]
+  type = "vnic"
+  vlan = "${nic.vlan}"
+  name = "${nic.name}"
+  ifname = "${nic.device}"
+  macaddr = "${nic.mac}"
+
+#end for
+
+##---------------------------
+## Not implemented at the moment
+##---------------------------
+##
+##[chardev "charserial0"]
+##  backend = "pipe"
+##  path = "/var/lib/nova/instances/instance-00000125/console.fifo"
+##
+##[chardev "charserial1"]
+##  backend = "pty"
+##
+##[device "serial0"]
+##  driver = "isa-serial"
+##  chardev = "charserial0"
+##
+##[device "serial1"]
+##  driver = "isa-serial"
+##  chardev = "charserial1"
+##
+##[device "balloon0"]
+##  driver = "virtio-balloon-pci"
+##  bus = "pci.0"
+##  addr = "0x6"
+##
+##[rtc]
+##  base = "utc"
