@@ -1229,6 +1229,8 @@ class NetworkManager(manager.SchedulerDependentManager):
         subnets_v4 = []
         subnets_v6 = []
 
+        fixed_cidr = kwargs.get('fixed_cidr', None)
+
         subnet_bits = int(math.ceil(math.log(network_size, 2)))
 
         if kwargs.get('ipam'):
@@ -1350,7 +1352,7 @@ class NetworkManager(manager.SchedulerDependentManager):
                 networks.append(network)
 
             if network and cidr and subnet_v4:
-                self._create_fixed_ips(context, network['id'])
+                self._create_fixed_ips(context, network['id'], fixed_cidr)
         return networks
 
     @wrap_check_policy
@@ -1378,18 +1380,19 @@ class NetworkManager(manager.SchedulerDependentManager):
         """Number of reserved ips at the top of the range."""
         return 1  # broadcast
 
-    def _create_fixed_ips(self, context, network_id):
+    def _create_fixed_ips(self, context, network_id, fixed_cidr=None):
         """Create all fixed ips for network."""
         network = self._get_network_by_id(context, network_id)
         # NOTE(vish): Should these be properties of the network as opposed
         #             to properties of the manager class?
         bottom_reserved = self._bottom_reserved_ips
         top_reserved = self._top_reserved_ips
-        project_net = netaddr.IPNetwork(network['cidr'])
-        num_ips = len(project_net)
+        if not fixed_cidr:
+            fixed_cidr = netaddr.IPNetwork(network['cidr'])
+        num_ips = len(fixed_cidr)
         ips = []
         for index in range(num_ips):
-            address = str(project_net[index])
+            address = str(fixed_cidr[index])
             if index < bottom_reserved or num_ips - index <= top_reserved:
                 reserved = True
             else:
